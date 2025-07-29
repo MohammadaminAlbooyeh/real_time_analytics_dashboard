@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Flashcards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 300px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            perspective: 1000px;
+            position: relative;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2em;
+            color: #555;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        .no-cards {
+            color: #666;
+            font-size: 1.1em;
+            margin-top: 50px;
+        }
+        .card-actions {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            left: 10px;
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+            z-index: 10;
+        }
+        .card-actions a {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            text-decoration: none;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .card-actions .edit-btn {
+            background-color: #28a745;
+        }
+        .card-actions .edit-btn:hover {
+            background-color: #218838;
+        }
+        .card-actions .delete-btn {
+            background-color: #dc3545;
+        }
+        .card-actions .delete-btn:hover {
+            background-color: #c82333;
+        }
+        .add-card-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-bottom: 20px;
+            text-decoration: none;
+        }
+        .add-card-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flashcard List</h1>
+
+    <a href="{% url 'card-create' %}" class="add-card-btn">Add New Flashcard</a>
+
+    {% if object_list %}
+        <div class="card-container">
+            {% for card in object_list %}
+                <div class="card" onclick="this.classList.toggle('flipped');">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            {{ card.question }}
+                        </div>
+                        <div class="card-back">
+                            {{ card.answer }}
+                            <div class="card-actions" onclick="event.stopPropagation();">
+                                <a href="{% url 'card-update' card.pk %}" class="edit-btn">Edit</a>
+                                <a href="{% url 'card-delete' card.pk %}" class="delete-btn">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="no-cards">There are no flashcards yet. Please add one using the management panel or the button above.</p>
+    {% endif %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.addEventListener('click', (event) => {
+                    if (!event.target.closest('.card-actions')) {
+                        card.classList.toggle('flipped');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

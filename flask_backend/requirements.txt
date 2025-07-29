@@ -1,7 +1,0 @@
-
-Flask
-flask_sqlalchemy
-flask_cors
-requests
-geopy
-python-dateutil
