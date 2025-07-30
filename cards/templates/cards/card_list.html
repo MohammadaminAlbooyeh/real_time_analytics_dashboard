@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Flashcards</title>
+    <title>
+        {% if box_num %}
+            Flashcards in Box {{ box_num }}
+        {% else %}
+            All Flashcards
+        {% endif %}
+    </title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -99,26 +105,33 @@
         .card-actions .delete-btn:hover {
             background-color: #c82333;
         }
-        .add-card-btn {
-            background-color: #007bff;
+        .back-button-container {
+            margin-top: 20px;
+        }
+        .back-button {
+            background-color: #6c757d;
             color: white;
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-size: 1em;
-            margin-bottom: 20px;
             text-decoration: none;
+            transition: background-color 0.3s ease;
         }
-        .add-card-btn:hover {
-            background-color: #0056b3;
+        .back-button:hover {
+            background-color: #5a6268;
         }
     </style>
 </head>
 <body>
-    <h1>Flashcard List</h1>
-
-    <a href="{% url 'card-create' %}" class="add-card-btn">Add New Flashcard</a>
+    <h1>
+        {% if box_num %}
+            Flashcards in Box {{ box_num }}
+        {% else %}
+            All Flashcards
+        {% endif %}
+    </h1>
 
     {% if object_list %}
         <div class="card-container">
@@ -140,8 +153,18 @@
             {% endfor %}
         </div>
     {% else %}
-        <p class="no-cards">There are no flashcards yet. Please add one using the management panel or the button above.</p>
+        <p class="no-cards">
+            {% if box_num %}
+                There are no flashcards in box {{ box_num }} yet.
+            {% else %}
+                There are no flashcards yet.
+            {% endif %}
+        </p>
     {% endif %}
+
+    <div class="back-button-container">
+        <a href="{% url 'boxes' %}" class="back-button">Back to Boxes</a>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
