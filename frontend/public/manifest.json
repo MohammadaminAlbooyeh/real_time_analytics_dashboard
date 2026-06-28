@@ -1,0 +1,9 @@
+{
+  "short_name": "Analytics",
+  "name": "Real-Time Analytics Dashboard",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0f172a",
+  "background_color": "#0f172a"
+}
