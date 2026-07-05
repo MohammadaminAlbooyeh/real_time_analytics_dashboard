@@ -185,6 +185,7 @@ A comprehensive real-time analytics dashboard built with modern web technologies
        │                        │  2. Verify Creds      │
        │                        ├───────────────────────►│
        │                        │◄───────────────────────┤
+       
        │◄───────────────────────┤  3. Return User       │
        │  JWT Token             │                        │
        │                        │                        │
