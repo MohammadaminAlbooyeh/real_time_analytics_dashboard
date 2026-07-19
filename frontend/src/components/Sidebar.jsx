@@ -2,13 +2,13 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const links = [
-  { to: '/', label: 'Dashboard', icon: '⊞' },
-  { to: '/analytics', label: 'Analytics', icon: '📊' },
+  { to: '/', label: 'Dashboard', icon: '📊' },
+  { to: '/analytics', label: 'Analytics', icon: '📈' },
   { to: '/metrics', label: 'Metrics', icon: '📏' },
   { to: '/alerts', label: 'Alerts', icon: '🔔' },
   { to: '/reports', label: 'Reports', icon: '📄' },
   { to: '/datasources', label: 'Data Sources', icon: '📡' },
-  { to: '/settings', label: 'Settings', icon: '⚙' },
+  { to: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
 export default function Sidebar() {
@@ -20,17 +20,18 @@ export default function Sidebar() {
         position: 'fixed',
         left: 0,
         top: 0,
-        background: 'var(--color-bg-secondary)',
-        borderRight: '1px solid var(--color-border)',
+        background: '#FFFFFF',
+        borderRight: '2px solid var(--color-border)',
         display: 'flex',
         flexDirection: 'column',
-        padding: '20px 0',
+        padding: '24px 0',
       }}
     >
       <div style={{ padding: '0 20px', marginBottom: 32 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-accent)' }}>
-          Analytics
+        <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 2 }}>
+          ANALYTICS
         </h1>
+        <div style={{ height: 3, width: 40, background: 'var(--color-accent)', marginTop: 8, borderRadius: 2 }} />
       </div>
       {links.map((link) => (
         <NavLink
@@ -40,18 +41,19 @@ export default function Sidebar() {
           style={({ isActive }) => ({
             display: 'flex',
             alignItems: 'center',
-            gap: 12,
-            padding: '12px 20px',
+            gap: 14,
+            padding: '14px 24px',
             textDecoration: 'none',
-            color: isActive ? 'var(--color-accent)' : 'var(--color-text-secondary)',
-            background: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-            borderRight: isActive ? '3px solid var(--color-accent)' : '3px solid transparent',
-            fontSize: 14,
-            fontWeight: isActive ? 600 : 400,
+            color: isActive ? 'var(--color-primary)' : 'var(--color-text-muted)',
+            background: isActive ? 'var(--color-primary-bg)' : 'transparent',
+            borderLeft: isActive ? '4px solid var(--color-primary)' : '4px solid transparent',
+            fontSize: 15,
+            fontWeight: isActive ? 700 : 500,
             transition: 'all 0.2s',
+            margin: '2px 0',
           })}
         >
-          <span>{link.icon}</span>
+          <span style={{ fontSize: 16 }}>{link.icon}</span>
           <span>{link.label}</span>
         </NavLink>
       ))}

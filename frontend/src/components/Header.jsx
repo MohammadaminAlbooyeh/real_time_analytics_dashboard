@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser } from '../store/selectors/dashboardSelectors';
 import { clearUser } from '../store/actions/userActions';
 import { logout } from '../services/auth';
+import Flip7Logo from './Flip7Logo';
 
 export default function Header() {
   const user = useSelector(selectCurrentUser);
@@ -17,20 +18,24 @@ export default function Header() {
     <header
       style={{
         height: 'var(--header-height)',
-        background: 'var(--color-bg-secondary)',
-        borderBottom: '1px solid var(--color-border)',
+        background: '#FFFFFF',
+        borderBottom: '2px solid var(--color-border)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 24px',
+        padding: '0 32px',
       }}
     >
-      <h2 style={{ fontSize: 18, fontWeight: 600 }}>Overview</h2>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <span style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
+        <Flip7Logo />
+        <div style={{ width: 1, height: 32, background: 'var(--color-border)', margin: '0 8px' }} />
+        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-secondary)', letterSpacing: 1 }}>OVERVIEW</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <span style={{ color: 'var(--color-text-primary)', fontSize: 14, fontWeight: 500 }}>
           {user?.full_name || user?.username || 'User'}
         </span>
-        <button className="btn btn-ghost" onClick={handleLogout}>
+        <button className="pill-btn" onClick={handleLogout} style={{ fontSize: 12, padding: '6px 16px' }}>
           Logout
         </button>
       </div>

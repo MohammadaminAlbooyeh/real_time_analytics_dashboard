@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { getRangePreset } from '../utils/date_utils';
 
 const presets = [
@@ -10,18 +10,21 @@ const presets = [
 ];
 
 export default function DateRangePicker({ value, onChange }) {
+  const [active, setActive] = useState('24h');
+
   const handlePreset = (preset) => {
+    setActive(preset);
     const range = getRangePreset(preset);
     onChange(range);
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
       {presets.map((p) => (
         <button
           key={p.key}
-          className="btn btn-ghost"
-          style={{ fontSize: 12, padding: '6px 12px' }}
+          className={active === p.key ? 'pill-btn pill-btn-active' : 'pill-btn'}
+          style={{ fontSize: 12, padding: '6px 14px', minHeight: 32 }}
           onClick={() => handlePreset(p.key)}
         >
           {p.label}
