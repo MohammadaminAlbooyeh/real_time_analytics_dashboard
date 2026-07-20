@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
@@ -9,6 +9,7 @@ class UserCreate(BaseModel):
     username: str
     password: str
     full_name: Optional[str] = None
+    tenant_id: Optional[str] = None
 
 
 class UserResponse(BaseModel):
@@ -18,6 +19,7 @@ class UserResponse(BaseModel):
     full_name: Optional[str] = None
     is_active: bool
     is_admin: bool
+    tenant_id: Optional[UUID] = None
     created_at: datetime
 
     class Config:
@@ -32,6 +34,65 @@ class TokenResponse(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+
+# --- Multi-Tenant ---
+class TenantCreate(BaseModel):
+    name: str
+    domain: Optional[str] = None
+    settings_json: Optional[str] = None
+
+
+class TenantResponse(BaseModel):
+    id: UUID
+    name: str
+    domain: Optional[str] = None
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# --- Data Retention ---
+class RetentionPolicyCreate(BaseModel):
+    metric_id: Optional[UUID] = None
+    tenant_id: Optional[UUID] = None
+    retention_days: int = 90
+
+
+class RetentionPolicyResponse(BaseModel):
+    id: UUID
+    metric_id: Optional[UUID] = None
+    tenant_id: Optional[UUID] = None
+    retention_days: int
+    enabled: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# --- Webhook Templates ---
+class WebhookTemplateCreate(BaseModel):
+    name: str
+    template_body: str
+    description: Optional[str] = None
+    template_headers: Optional[str] = None
+    content_type: str = "application/json"
+    is_default: bool = False
+
+
+class WebhookTemplateResponse(BaseModel):
+    id: UUID
+    name: str
+    description: Optional[str] = None
+    content_type: str
+    is_default: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class MetricCreate(BaseModel):
@@ -119,3 +180,4 @@ class CompareQuery(BaseModel):
     current_end: datetime
     previous_start: datetime
     previous_end: datetime
+

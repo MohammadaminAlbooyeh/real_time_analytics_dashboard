@@ -326,14 +326,17 @@ For issues, questions, or feedback:
 
 ## Roadmap
 
-- [ ] GraphQL API
-- [ ] Data retention policies
-- [ ] Advanced anomaly detection
-- [ ] Custom webhook templating
-- [ ] SAML/OAuth authentication
-- [ ] Multi-tenant support
-- [ ] Data encryption at rest
-- [ ] Compliance reports (GDPR, SOC2)
+- [x] GraphQL API
+- [x] Data retention policies
+- [x] Advanced anomaly detection (Isolation Forest)
+- [x] Custom webhook templating (Jinja2)
+- [x] SAML/OAuth authentication
+- [x] Multi-tenant support
+- [x] Data encryption at rest (AES-256-GCM)
+- [x] Compliance reports (GDPR, SOC2)
+- [x] Machine Learning predictions (Random Forest)
+- [x] Rate limiting (slowapi)
+- [x] HTTPS/TLS support (Nginx + Let's Encrypt ready)
 
 ## Status
 
