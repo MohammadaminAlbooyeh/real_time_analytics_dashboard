@@ -1,0 +1,74 @@
+name: Security Audit
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      format:
+        description: Output format
+        required: true
+        default: 'text'
+        type: choice
+        options:
+          - text
+          - json
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety bandit pip-audit
+
+      - name: Check SSL cert expiry
+        run: |
+          if [ -f nginx/ssl/cert.pem ]; then
+            openssl x509 -enddate -noout -in nginx/ssl/cert.pem || echo "Failed to check cert"
+          fi
+
+      - name: Run security audit script
+        run: |
+          chmod +x scripts/security_audit.sh
+          if [ "${{ github.event.inputs.format }}" = "json" ]; then
+            ./scripts/security_audit.sh --json || true
+          else
+            ./scripts/security_audit.sh || true
+          fi
+
+      - name: Scan for secrets with Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+
+      - name: Check dependency vulnerabilities
+        run: |
+          echo "=== Python Dependencies ==="
+          pip-audit -r requirements.txt --desc on 2>&1 || true
+          echo ""
+          echo "=== npm Dependencies ==="
+          if [ -f package-lock.json ]; then
+            npm audit --audit-level=high 2>&1 || true
+          fi
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-audit-report
+          path: security-audit-report-*.txt
+          retention-days: 90
+        continue-on-error: true
+
+      - name: Notify on failures
+        if: failure()
+        run: |
+          echo "Security audit found issues. Check the audit report for details."

@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: analytics-config
+  namespace: analytics
+  labels:
+    app: analytics
+data:
+  APP_NAME: "Real-Time Analytics Dashboard"
+  API_PREFIX: "/api/v1"
+  JWT_ALGORITHM: "HS256"
+  JWT_EXPIRE_MINUTES: "60"
+  RATE_LIMIT_ENABLED: "true"
+  RATE_LIMIT_DEFAULT: "100/minute"
+  MULTI_TENANT_ENABLED: "true"
+  DEFAULT_TENANT: "default"
+  ENCRYPTION_ENABLED: "true"
+  SAML_ENABLED: "false"
+  RETENTION_DEFAULT_DAYS: "90"
+  RETENTION_MAX_DAYS: "365"
+  ML_ANOMALY_CONTAMINATION: "0.05"
+  ML_FORECAST_HORIZON: "24"
+  LOG_LEVEL: "INFO"
+  LOG_FORMAT: "json"
+  PROMETHEUS_ENABLED: "true"
+  SSL_ENABLED: "true"
+
+  # Kafka
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  KAFKA_CONSUMER_GROUP: "analytics-consumer"
+
+  # WebSocket
+  WEBSOCKET_HEARTBEAT_INTERVAL: "30"

@@ -9,7 +9,7 @@ on:
     - cron: '0 0 * * *'
 
 jobs:
-  dependency-check:
+  python-dependency-check:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,13 +23,43 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install safety bandit
+        pip install safety bandit pip-audit
 
-    - name: Check for vulnerable dependencies
+    - name: Safety check (known vulnerabilities)
       run: safety check --json || true
 
-    - name: Run Bandit security scan
+    - name: pip-audit (PEP 668)
+      run: pip-audit -r requirements.txt --desc on || true
+
+    - name: Bandit SAST scan
       run: bandit -r backend/ -f json || true
+
+  javascript-dependency-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install frontend dependencies
+      working-directory: frontend
+      run: npm ci || true
+
+    - name: npm audit
+      working-directory: frontend
+      run: npm audit --audit-level=high || true
+
+    - name: npm outdated
+      working-directory: frontend
+      run: npm outdated || true
+
+    - name: Check for malicious packages
+      working-directory: frontend
+      run: npx @contrast/malicious-packages-scan || true
 
   container-scan:
     runs-on: ubuntu-latest
@@ -42,28 +72,97 @@ jobs:
         docker build -f Dockerfile.backend -t analytics-backend:latest .
         docker build -f Dockerfile.frontend -t analytics-frontend:latest .
 
-    - name: Run Trivy vulnerability scanner
+    - name: Run Trivy on backend image
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: 'analytics-backend:latest'
         format: 'sarif'
-        output: 'trivy-results.sarif'
+        output: 'trivy-backend-results.sarif'
+        severity: 'CRITICAL,HIGH'
+      continue-on-error: true
+
+    - name: Run Trivy on frontend image
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'analytics-frontend:latest'
+        format: 'sarif'
+        output: 'trivy-frontend-results.sarif'
+        severity: 'CRITICAL,HIGH'
+      continue-on-error: true
+
+    - name: Run Trivy on filesystem
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-fs-results.sarif'
+        severity: 'CRITICAL,HIGH'
       continue-on-error: true
 
     - name: Upload Trivy results
       uses: github/codeql-action/upload-sarif@v2
       with:
-        sarif_file: 'trivy-results.sarif'
+        sarif_file: 'trivy-backend-results.sarif'
       continue-on-error: true
+
+    - name: Upload frontend scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-frontend-results.sarif'
+      continue-on-error: true
+
+    - name: Upload filesystem scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-fs-results.sarif'
+      continue-on-error: true
+
+  codeql-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: python, javascript
+        queries: security-and-quality
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v2
+
+    - name: Perform CodeQL analysis
+      uses: github/codeql-action/analyze@v2
 
   secret-scan:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
     - name: GitGuardian scan
       uses: gitguardian/ggshield-action@v1
       env:
         GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
       continue-on-error: true
+
+    - name: TruffleHog scan
+      run: |
+        docker run --rm -v "$(pwd):/workdir" trufflesecurity/trufflehog:latest filesystem --directory=/workdir --json || true
+      continue-on-error: true
+
+  dependency-review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v3
+      with:
+        fail-on-severity: high

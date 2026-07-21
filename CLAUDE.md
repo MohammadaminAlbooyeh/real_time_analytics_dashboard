@@ -264,10 +264,11 @@ All services have health checks configured:
 - [x] HTTPS/TLS support (Nginx + Let's Encrypt ready)
 
 ### Production Roadmap
-- [ ] Kubernetes deployment manifests
-- [ ] Web Application Firewall (advanced rules)
-- [ ] Regular security audits
-- [ ] Secret rotation policy
+- [x] Kubernetes deployment manifests
+- [x] Web Application Firewall (advanced rules)
+- [x] Regular security audits
+- [x] Secret rotation policy
+- [x] Dependency scanning (GitHub Actions)
 
 ## Performance Characteristics
 
@@ -299,10 +300,10 @@ All services have health checks configured:
 - ✅ Multi-tenant isolation
 
 ### Recommended for Production
-- [ ] Add Web Application Firewall
-- [ ] Regular security audits
-- [ ] Secret rotation policy
-- [ ] Dependency scanning (GitHub)
+- [x] Web Application Firewall (Nginx WAF + enhanced rules)
+- [x] Regular security audits (weekly scheduled + manual trigger)
+- [x] Secret rotation policy (quarterly automated rotation)
+- [x] Dependency scanning (Dependabot, Trivy, Safety, npm audit, CodeQL)
 
 ## Contact & Support
 
@@ -317,6 +318,14 @@ For issues:
 MIT License - See LICENSE file
 
 ## Changelog
+
+### 2026-07-21 - Production Hardening & Infrastructure Complete
+- ✅ Kubernetes deployment manifests (k8s/) - Full K8s configs for all services
+- ✅ Web Application Firewall (nginx/waf/) - Enhanced SQLi, XSS, LFI, path traversal rules
+- ✅ Regular security audits (weekly scheduled GitHub Actions workflow)
+- ✅ Secret rotation policy (docs/SECRET_ROTATION.md + quarterly automated workflow)
+- ✅ Enhanced dependency scanning (Dependabot, CodeQL, Trivy, Safety, npm audit, pip-audit)
+- ✅ Dependabot configuration for pip, npm, docker, and GitHub Actions
 
 ### 2026-07-21 - Advanced Features & Production Readiness
 - ✅ GraphQL API (Strawberry)

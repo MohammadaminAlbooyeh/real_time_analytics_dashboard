@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: analytics
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secrets.yaml
+  - postgres-statefulset.yaml
+  - redis.yaml
+  - zookeeper.yaml
+  - kafka.yaml
+  - backend.yaml
+  - frontend.yaml
+  - nginx.yaml
+  - nginx-configmap.yaml
+  - ingress.yaml
+
+commonLabels:
+  environment: production
+  managed-by: kustomize
+
+images:
+  - name: analytics-backend
+    newName: your-registry/analytics-backend
+    newTag: latest
+  - name: analytics-frontend
+    newName: your-registry/analytics-frontend
+    newTag: latest
