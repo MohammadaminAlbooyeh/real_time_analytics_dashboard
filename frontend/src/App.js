@@ -14,6 +14,8 @@ import MetricsPage from './pages/MetricsPage';
 import ReportsPage from './pages/ReportsPage';
 import DataSourcesPage from './pages/DataSourcesPage';
 import SettingsPage from './pages/SettingsPage';
+import MLPage from './pages/MLPage';
+import AdminPage from './pages/AdminPage';
 
 function ProtectedRoute({ children }) {
   const isAuth = useSelector(selectIsAuthenticated);
@@ -91,6 +93,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <AppLayout><DataSourcesPage /></AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics-ml"
+          element={
+            <ProtectedRoute>
+              <AppLayout><MLPage /></AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AppLayout><AdminPage /></AppLayout>
             </ProtectedRoute>
           }
         />

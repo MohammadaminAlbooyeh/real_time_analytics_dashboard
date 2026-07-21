@@ -338,3 +338,54 @@ async def get_ml_insights(
 ):
     service = MLService(session)
     return await service.get_model_insights(metric_id)
+
+
+# ──────────────────────────────────────────────
+# Admin Status & Config
+# ──────────────────────────────────────────────
+@router.get("/status")
+async def admin_status(
+    current_user: User = Depends(get_admin_user),
+):
+    return {"status": "ok", "admin": True, "user": current_user.username}
+
+
+@router.get("/tenant-info")
+async def get_current_tenant_info(
+    current_user: User = Depends(get_admin_user),
+):
+    return {
+        "tenant_id": str(current_user.tenant_id) if current_user.tenant_id else None,
+        "is_active": True,
+    }
+
+
+@router.get("/security-status")
+async def get_security_status(
+    current_user: User = Depends(get_admin_user),
+):
+    from config.settings import settings as app_settings
+
+    return {
+        "encryption_enabled": bool(app_settings.encryption_enabled),
+        "encryption_method": "AES-256-GCM",
+        "saml_enabled": bool(app_settings.saml_enabled),
+        "saml_provider": app_settings.saml_idp_metadata_url or "local",
+        "mfa_enabled": False,
+    }
+
+
+@router.get("/ml/config")
+async def get_ml_config(
+    current_user: User = Depends(get_admin_user),
+):
+    from config.settings import settings as app_settings
+
+    return {
+        "model_name": "scikit-learn",
+        "default_contamination": app_settings.ml_anomaly_contamination,
+        "max_lookback_hours": 336,
+        "forecast_horizon": app_settings.ml_forecast_horizon,
+        "anomaly_detection_enabled": True,
+        "forecasting_enabled": True,
+    }

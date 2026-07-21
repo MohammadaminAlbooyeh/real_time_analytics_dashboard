@@ -4,10 +4,12 @@ import { NavLink } from 'react-router-dom';
 const links = [
   { to: '/', label: 'Dashboard', icon: '📊' },
   { to: '/analytics', label: 'Analytics', icon: '📈' },
+  { to: '/analytics-ml', label: 'Analytics ML', icon: '🔬' },
   { to: '/metrics', label: 'Metrics', icon: '📏' },
   { to: '/alerts', label: 'Alerts', icon: '🔔' },
   { to: '/reports', label: 'Reports', icon: '📄' },
   { to: '/datasources', label: 'Data Sources', icon: '📡' },
+  { to: '/admin', label: 'Admin', icon: '🏢' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
