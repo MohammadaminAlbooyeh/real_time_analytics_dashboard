@@ -58,6 +58,10 @@ class AnalyticsService:
         }
 
     async def summary(self, metric_id: uuid.UUID) -> dict:
+        service = MetricService(self.session)
+        metric = await service.get_by_id(metric_id)
+        if not metric:
+            raise ValueError("Metric not found")
         now = datetime.now(timezone.utc)
         day_ago = now - timedelta(days=1)
         week_ago = now - timedelta(weeks=1)

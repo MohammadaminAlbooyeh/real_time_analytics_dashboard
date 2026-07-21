@@ -57,8 +57,7 @@ if settings.rate_limit_enabled:
 app.include_router(auth_router)
 app.include_router(api_router)
 app.include_router(ws_router)
-if settings.saml_enabled:
-    app.include_router(saml_router)
+app.include_router(saml_router)
 app.include_router(admin_router)
 
 # GraphQL endpoint

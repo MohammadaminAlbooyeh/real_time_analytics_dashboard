@@ -4,16 +4,16 @@ from datetime import datetime, timedelta
 
 
 @pytest.mark.asyncio
-async def test_get_summary_metric_not_found(client):
+async def test_get_summary_metric_not_found(auth_client):
     metric_id = str(uuid4())
-    response = await client.get(f"/api/v1/analytics/summary/{metric_id}")
+    response = await auth_client.get(f"/api/v1/analytics/summary/{metric_id}")
     assert response.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_get_timeseries_invalid_dates(client):
+async def test_get_timeseries_invalid_dates(auth_client):
     metric_id = str(uuid4())
-    response = await client.get(
+    response = await auth_client.get(
         f"/api/v1/analytics/timeseries"
         f"?metric_id={metric_id}&start=invalid&end=2024-01-15"
     )
@@ -21,7 +21,7 @@ async def test_get_timeseries_invalid_dates(client):
 
 
 @pytest.mark.asyncio
-async def test_compare_periods_invalid_metric(client):
+async def test_compare_periods_invalid_metric(auth_client):
     payload = {
         "metric_id": str(uuid4()),
         "current_start": "2024-01-08T00:00:00Z",
@@ -30,5 +30,5 @@ async def test_compare_periods_invalid_metric(client):
         "previous_end": "2024-01-08T00:00:00Z",
     }
 
-    response = await client.post("/api/v1/analytics/compare", json=payload)
+    response = await auth_client.post("/api/v1/analytics/compare", json=payload)
     assert response.status_code == 404

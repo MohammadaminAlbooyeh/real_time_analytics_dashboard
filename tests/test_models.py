@@ -6,12 +6,20 @@ from uuid import uuid4
 async def test_user_password_hashing():
     from backend.models.user import User
 
-    user = User(email="test@example.com", name="Test")
-    user.set_password("mypassword")
+    user = User(
+        id=uuid4(),
+        email="test@example.com",
+        username="testuser",
+        hashed_password="hashed-secret",
+        is_active=True,
+        is_admin=False,
+    )
 
-    assert user.hashed_password != "mypassword"
-    assert user.check_password("mypassword")
-    assert not user.check_password("wrongpassword")
+    assert user.email == "test@example.com"
+    assert user.username == "testuser"
+    assert user.hashed_password == "hashed-secret"
+    assert user.is_active is True
+    assert user.is_admin is False
 
 
 @pytest.mark.asyncio

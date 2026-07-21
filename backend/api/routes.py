@@ -27,7 +27,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.post("/metrics", response_model=MetricResponse)
+@router.post("/metrics", response_model=MetricResponse, status_code=201)
 async def create_metric(body: MetricCreate, session: AsyncSession = Depends(get_db),
                         current_user: User = Depends(get_current_user)):
     service = MetricService(session)
@@ -102,7 +102,7 @@ async def compare_periods(body: CompareQuery, session: AsyncSession = Depends(ge
     )
 
 
-@router.post("/dashboards")
+@router.post("/dashboards", status_code=201)
 async def create_dashboard(body: DashboardCreate,
                            session: AsyncSession = Depends(get_db),
                            current_user: User = Depends(get_current_user)):
@@ -177,7 +177,19 @@ async def remove_dashboard_item(item_id: UUID, session: AsyncSession = Depends(g
     return {"status": "deleted"}
 
 
-@router.post("/alerts/rules")
+@router.delete("/dashboards/{dashboard_id}")
+async def delete_dashboard(dashboard_id: UUID, session: AsyncSession = Depends(get_db),
+                           current_user: User = Depends(get_current_user)):
+    service = DashboardService(session)
+    dashboard = await service.get_by_id(dashboard_id)
+    if not dashboard:
+        raise HTTPException(status_code=404, detail="Dashboard not found")
+    await service.session.delete(dashboard)
+    await service.session.flush()
+    return {"status": "deleted"}
+
+
+@router.post("/alerts/rules", status_code=201)
 async def create_alert_rule(body: AlertRuleCreate, session: AsyncSession = Depends(get_db),
                             current_user: User = Depends(get_current_user)):
     service = AlertService(session)
@@ -237,7 +249,7 @@ async def resolve_alert(event_id: UUID, session: AsyncSession = Depends(get_db),
     return {"status": "resolved"}
 
 
-@router.post("/datasources")
+@router.post("/datasources", status_code=201)
 async def create_data_source(body: DataSourceCreate, session: AsyncSession = Depends(get_db),
                              current_user: User = Depends(get_current_user)):
     service = DataSourceService(session)

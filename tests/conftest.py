@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 
 from backend.main import app
-from backend.api.dependencies import get_db
+from backend.api.dependencies import get_db, get_current_user, get_admin_user
 from config.database_config import Base
 from backend.models import *  # noqa: F401, F403
 
@@ -95,6 +95,39 @@ async def client(db_session):
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as async_client:
+        yield async_client
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def auth_client(db_session):
+    user = User(
+        id=uuid4(),
+        email="test@example.com",
+        username="testuser",
+        hashed_password="testpass",
+        is_active=True,
+        is_admin=False,
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    async def override_get_db():
+        yield db_session
+
+    async def override_get_current_user():
+        return user
+
+    async def override_get_admin_user():
+        return user
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_admin_user] = override_get_admin_user
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as async_client:
