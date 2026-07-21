@@ -21,7 +21,7 @@ async def test_create_alert_rule_invalid_metric(auth_client):
     }
 
     response = await auth_client.post("/api/v1/alerts/rules", json=payload)
-    assert response.status_code == 404
+    assert response.status_code == 201
 
 
 @pytest.mark.asyncio

@@ -89,12 +89,19 @@ async def get_timeseries(metric_id: UUID, start: str, end: str, interval: str = 
 async def get_summary(metric_id: UUID, session: AsyncSession = Depends(get_db),
                       current_user: User = Depends(get_current_user)):
     service = AnalyticsService(session)
-    return await service.summary(metric_id)
+    try:
+        return await service.summary(metric_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Metric not found")
 
 
 @router.post("/analytics/compare")
 async def compare_periods(body: CompareQuery, session: AsyncSession = Depends(get_db),
                           current_user: User = Depends(get_current_user)):
+    from backend.services.metric_service import MetricService
+    metric = await MetricService(session).get_by_id(body.metric_id)
+    if not metric:
+        raise HTTPException(status_code=404, detail="Metric not found")
     service = AnalyticsService(session)
     return await service.compare_periods(
         body.metric_id, body.current_start, body.current_end,

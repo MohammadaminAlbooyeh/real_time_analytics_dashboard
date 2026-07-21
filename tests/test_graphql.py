@@ -7,15 +7,15 @@ query {
         id
         name
         key
-        data_type
-        is_active
+        dataType
+        isActive
     }
 }
 """
 
 METRIC_QUERY = """
 query($id: String!) {
-    metric(metric_id: $id) {
+    metric(metricId: $id) {
         id
         name
         key
@@ -25,9 +25,9 @@ query($id: String!) {
 
 TIMESERIES_QUERY = """
 query($metricId: String!, $start: String!, $end: String!) {
-    timeseries(metric_id: $metricId, start: $start, end: $end) {
+    timeseries(metricId: $metricId, start: $start, end: $end) {
         id
-        metric_id
+        metricId
         value
         timestamp
     }
@@ -36,10 +36,10 @@ query($metricId: String!, $start: String!, $end: String!) {
 
 ANOMALIES_QUERY = """
 query($metricId: String!) {
-    anomalies(metric_id: $metricId) {
+    anomalies(metricId: $metricId) {
         timestamp
         value
-        anomaly_score
+        anomalyScore
         severity
     }
 }
@@ -47,31 +47,31 @@ query($metricId: String!) {
 
 FORECASTS_QUERY = """
 query($metricId: String!) {
-    forecasts(metric_id: $metricId, forecast_hours: 5) {
+    forecasts(metricId: $metricId, forecastHours: 5) {
         timestamp
-        predicted_value
-        confidence_lower
-        confidence_upper
+        predictedValue
+        confidenceLower
+        confidenceUpper
     }
 }
 """
 
 ANALYTICS_SUMMARY_QUERY = """
 query($metricId: String!) {
-    analytics_summary(metric_id: $metricId) {
-        avg_last_24h
-        avg_last_7d
-        datapoints_last_24h
+    analyticsSummary(metricId: $metricId) {
+        avgLast24h
+        avgLast7d
+        datapointsLast24h
     }
 }
 """
 
 ALERT_RULES_QUERY = """
 query {
-    alert_rules {
+    alertRules {
         id
         name
-        metric_id
+        metricId
         condition
         threshold
         severity
@@ -104,7 +104,6 @@ async def test_graphql_metric_query(auth_client):
     assert response.status_code == 200
     data = response.json()
     assert "data" in data
-    # metric may be null if not found, but query should not error
     assert data["data"].get("metric") is None or isinstance(data["data"].get("metric"), dict)
 
 
@@ -144,17 +143,29 @@ async def test_graphql_forecasts_query(auth_client):
 
 @pytest.mark.asyncio
 async def test_graphql_analytics_summary_query(auth_client):
-    variables = {"metricId": "00000000-0000-0000-0000-000000000001"}
+    # First create a metric to get a valid summary
+    payload = {
+        "name": "Summary Metric",
+        "key": "summary_test_metric",
+        "description": "For summary test",
+        "unit": "count",
+        "data_type": "numeric",
+        "aggregation_method": "avg",
+    }
+    create_resp = await auth_client.post("/api/v1/metrics", json=payload)
+    assert create_resp.status_code == 201
+    metric_id = create_resp.json()["id"]
+
+    variables = {"metricId": metric_id}
     response = await _post_graphql(auth_client, ANALYTICS_SUMMARY_QUERY, variables)
     assert response.status_code == 200
     data = response.json()
     assert "data" in data
-    summary = data["data"].get("analytics_summary")
-    # Should return a valid summary (possibly with nulls)
+    summary = data["data"].get("analyticsSummary")
     assert summary is not None
-    assert "avg_last_24h" in summary
-    assert "avg_last_7d" in summary
-    assert "datapoints_last_24h" in summary
+    assert "avgLast24h" in summary
+    assert "avgLast7d" in summary
+    assert "datapointsLast24h" in summary
 
 
 @pytest.mark.asyncio
@@ -163,7 +174,7 @@ async def test_graphql_alert_rules_query(auth_client):
     assert response.status_code == 200
     data = response.json()
     assert "data" in data
-    assert isinstance(data["data"].get("alert_rules"), list)
+    assert isinstance(data["data"].get("alertRules"), list)
 
 
 @pytest.mark.asyncio

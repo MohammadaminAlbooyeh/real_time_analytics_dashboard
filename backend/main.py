@@ -61,9 +61,15 @@ app.include_router(saml_router)
 app.include_router(admin_router)
 
 # GraphQL endpoint
+from fastapi import Depends
 from strawberry.fastapi import GraphQLRouter
 from backend.api.graphql_schema import schema
-graphql_router = GraphQLRouter(schema)
+from backend.api.dependencies import get_db
+
+async def get_graphql_context(db=Depends(get_db)):
+    return {"db": db}
+
+graphql_router = GraphQLRouter(schema, context_getter=get_graphql_context)
 app.include_router(graphql_router, prefix="/graphql")
 
 

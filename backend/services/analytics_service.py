@@ -4,6 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.models.time_series import TimeSeriesDataPoint
 from backend.models.metric import Metric
+from backend.services.metric_service import MetricService
 from backend.utils.logger import get_logger
 
 logger = get_logger("analytics_service")
