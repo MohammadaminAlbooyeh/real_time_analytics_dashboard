@@ -21,7 +21,7 @@
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.32",
     "@testing-library/react": "^14.1.2",
-    "@testing-library/jest-dom": "^6.1.5"
+    "@testing-library/jest-dom": "^7.0.0"
   },
   "scripts": {
     "start": "react-scripts start",
