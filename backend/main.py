@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,12 +12,14 @@ from backend.api.saml_routes import router as saml_router
 from backend.api.admin_routes import router as admin_router
 from backend.kafka.producer import AnalyticsKafkaProducer
 from backend.kafka.consumer import AnalyticsKafkaConsumer
+from backend.kafka.all_events_consumer import AllEventsConsumer
 from backend.utils.logger import get_logger
 
 logger = get_logger("main")
 
 kafka_producer = AnalyticsKafkaProducer()
 kafka_consumer = AnalyticsKafkaConsumer()
+all_events_consumer = AllEventsConsumer()
 
 
 @asynccontextmanager
@@ -25,7 +28,23 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.app_name}")
     await init_redis()
     await kafka_producer.start()
+
+    all_events_task: asyncio.Task | None = None
+    if settings.kafka_enabled:
+        try:
+            await all_events_consumer.start()
+            all_events_task = asyncio.create_task(all_events_consumer.consume())
+        except Exception as e:
+            logger.warning("Could not start all-events consumer: %s", e)
+    else:
+        logger.info("Platform Kafka disabled, skipping all-events consumer")
+
     yield
+
+    if all_events_task is not None:
+        all_events_task.cancel()
+    if settings.kafka_enabled:
+        await all_events_consumer.stop()
     await kafka_producer.stop()
     await close_redis()
     logger.info("Application stopped")
@@ -50,6 +69,7 @@ if settings.rate_limit_enabled:
     from slowapi import _rate_limit_exceeded_handler
     from slowapi.errors import RateLimitExceeded
     from backend.api.dependencies import limiter
+
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -66,8 +86,10 @@ from strawberry.fastapi import GraphQLRouter
 from backend.api.graphql_schema import schema
 from backend.api.dependencies import get_db
 
+
 async def get_graphql_context(db=Depends(get_db)):
     return {"db": db}
+
 
 graphql_router = GraphQLRouter(schema, context_getter=get_graphql_context)
 app.include_router(graphql_router, prefix="/graphql")
@@ -76,4 +98,3 @@ app.include_router(graphql_router, prefix="/graphql")
 @app.get("/health")
 async def health():
     return {"status": "healthy", "service": settings.app_name, "version": "2.0.0"}
-

@@ -15,6 +15,7 @@ class Settings(BaseSettings):
 
     kafka_bootstrap_servers: str = "localhost:9092"
     kafka_consumer_group: str = "analytics-consumer"
+    kafka_enabled: bool = False
 
     websocket_heartbeat_interval: int = 30
 
