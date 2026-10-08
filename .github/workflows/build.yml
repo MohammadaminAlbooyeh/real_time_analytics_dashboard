@@ -4,66 +4,143 @@ on:
   push:
     branches: [ main, develop ]
     tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, develop ]
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  DOCKER_HUB: docker.io
 
 jobs:
-  build:
+  build-backend:
+    name: Build Backend Docker Image
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: write
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to GitHub Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Log in to Docker Hub
-      uses: docker/login-action@v2
+      if: github.event_name != 'pull_request' && secrets.DOCKER_USERNAME != ''
+      uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-      if: github.event_name != 'pull_request'
 
-    - name: Extract metadata (backend)
-      id: meta-backend
-      uses: docker/metadata-action@v4
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
       with:
         images: |
-          ${{ secrets.DOCKER_USERNAME }}/analytics-backend
+          ${{ env.REGISTRY }}/${{ github.repository }}/backend
+          ${{ secrets.DOCKER_USERNAME != '' && format('{0}/{1}/analytics-backend', env.DOCKER_HUB, secrets.DOCKER_USERNAME) || '' }}
         tags: |
           type=ref,event=branch
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
-          type=sha
-
-    - name: Extract metadata (frontend)
-      id: meta-frontend
-      uses: docker/metadata-action@v4
-      with:
-        images: |
-          ${{ secrets.DOCKER_USERNAME }}/analytics-frontend
-        tags: |
-          type=ref,event=branch
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=sha
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
 
     - name: Build and push backend
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       with:
         context: .
         file: ./Dockerfile.backend
         push: ${{ github.event_name != 'pull_request' }}
-        tags: ${{ steps.meta-backend.outputs.tags }}
-        labels: ${{ steps.meta-backend.outputs.labels }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          VCS_REF=${{ github.sha }}
+          VERSION=${{ steps.meta.outputs.version }}
+
+  build-frontend:
+    name: Build Frontend Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to GitHub Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Log in to Docker Hub
+      if: github.event_name != 'pull_request' && secrets.DOCKER_USERNAME != ''
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: |
+          ${{ env.REGISTRY }}/${{ github.repository }}/frontend
+          ${{ secrets.DOCKER_USERNAME != '' && format('{0}/{1}/analytics-frontend', env.DOCKER_HUB, secrets.DOCKER_USERNAME) || '' }}
+        tags: |
+          type=ref,event=branch
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
 
     - name: Build and push frontend
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       with:
         context: .
         file: ./Dockerfile.frontend
         push: ${{ github.event_name != 'pull_request' }}
-        tags: ${{ steps.meta-frontend.outputs.tags }}
-        labels: ${{ steps.meta-frontend.outputs.labels }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          VCS_REF=${{ github.sha }}
+          VERSION=${{ steps.meta.outputs.version }}
+
+  build-results:
+    name: Build Results Summary
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+    - name: Check build status
+      run: |
+        if [[ "${{ needs.build-backend.result }}" == "failure" ]] || [[ "${{ needs.build-frontend.result }}" == "failure" ]]; then
+          echo "❌ Docker builds failed"
+          exit 1
+        fi
+        echo "✅ All Docker images built successfully"

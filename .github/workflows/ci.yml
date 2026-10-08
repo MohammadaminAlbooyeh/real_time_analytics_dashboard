@@ -1,0 +1,67 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Linting
+    uses: ./.github/workflows/lint.yml
+
+  tests:
+    name: Tests
+    uses: ./.github/workflows/tests.yml
+
+  security:
+    name: Security Scans
+    uses: ./.github/workflows/security.yml
+
+  build:
+    name: Build
+    needs: [lint, tests]
+    uses: ./.github/workflows/build.yml
+
+  quality-gate:
+    name: Quality Gate Check
+    needs: [lint, tests, security, build]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+    - name: Check Quality Gate
+      run: |
+        echo "=== CI Pipeline Status ==="
+        echo "Linting: ${{ needs.lint.result }}"
+        echo "Tests: ${{ needs.tests.result }}"
+        echo "Security: ${{ needs.security.result }}"
+        echo "Build: ${{ needs.build.result }}"
+        echo ""
+
+        # Fail if critical checks fail
+        if [[ "${{ needs.lint.result }}" == "failure" ]] || \
+           [[ "${{ needs.tests.result }}" == "failure" ]] || \
+           [[ "${{ needs.build.result }}" == "failure" ]]; then
+          echo "❌ Quality gate FAILED"
+          exit 1
+        fi
+
+        # Warn about security issues
+        if [[ "${{ needs.security.result }}" == "failure" ]]; then
+          echo "⚠️  Security issues detected - review GitHub Security tab"
+        fi
+
+        echo "✅ Quality gate PASSED"
+
+    - name: Notify completion
+      if: always()
+      run: |
+        echo "✅ CI pipeline completed at $(date -u)"
+        echo "Commit: ${{ github.sha }}"
+        echo "Branch: ${{ github.ref_name }}"

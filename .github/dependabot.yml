@@ -1,5 +1,7 @@
 version: 2
+
 updates:
+  # Python dependencies
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
@@ -8,69 +10,86 @@ updates:
       time: "09:00"
       timezone: "UTC"
     open-pull-requests-limit: 10
+    pull-request-branch-name:
+      separator: "/"
     labels:
       - "dependencies"
       - "python"
     commit-message:
-      prefix: "chore"
+      prefix: "chore(deps)"
       include: "scope"
-    reviewers:
-      - "team-maintainers"
-    assignees:
-      - "security-team"
     allow:
       - dependency-type: "direct"
     ignore:
       - dependency-name: "*"
-        update-types: ["version-update:semver-patch"]
+        update-types:
+          - "version-update:semver-patch"
+          - "version-update:semver-minor"
+    rebase-strategy: "auto"
 
+  # JavaScript dependencies (frontend)
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
       interval: "weekly"
       day: "monday"
-      time: "09:00"
+      time: "10:00"
       timezone: "UTC"
     open-pull-requests-limit: 10
+    pull-request-branch-name:
+      separator: "/"
     labels:
       - "dependencies"
       - "javascript"
+      - "frontend"
     commit-message:
-      prefix: "chore"
+      prefix: "chore(deps)"
       include: "scope"
-    reviewers:
-      - "team-maintainers"
-    assignees:
-      - "security-team"
     allow:
       - dependency-type: "direct"
     ignore:
       - dependency-name: "*"
-        update-types: ["version-update:semver-patch"]
+        update-types:
+          - "version-update:semver-patch"
+          - "version-update:semver-minor"
+    rebase-strategy: "auto"
 
+  # Docker base images
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
+      day: "tuesday"
       time: "09:00"
       timezone: "UTC"
     open-pull-requests-limit: 5
+    pull-request-branch-name:
+      separator: "/"
     labels:
       - "dependencies"
       - "docker"
+      - "infrastructure"
     commit-message:
-      prefix: "chore"
+      prefix: "chore(docker)"
       include: "scope"
+    rebase-strategy: "auto"
 
+  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
+      day: "first"
+      time: "09:00"
+      timezone: "UTC"
     open-pull-requests-limit: 5
+    pull-request-branch-name:
+      separator: "/"
     labels:
       - "dependencies"
       - "ci"
+      - "github-actions"
     commit-message:
-      prefix: "chore"
+      prefix: "chore(ci)"
       include: "scope"
+    rebase-strategy: "auto"
