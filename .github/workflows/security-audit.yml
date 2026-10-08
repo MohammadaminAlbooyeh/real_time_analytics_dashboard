@@ -61,7 +61,7 @@ jobs:
           fi
 
       - name: Upload audit report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         with:
           name: security-audit-report
           path: security-audit-report-*.txt
